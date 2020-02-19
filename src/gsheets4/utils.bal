@@ -22,20 +22,42 @@ function setResponseError(json jsonResponse) returns error {
 }
 
 function setResError(error errorResponse) returns error {
-    error err = error(SPREADSHEET_ERROR_CODE, message = <string> errorResponse.detail()?.message);
+    error err = error(SPREADSHEET_ERROR_CODE, message = <string>errorResponse.detail()?.message);
     return err;
 }
 
-function setJsonResponse(json jsonResponse, int statusCode) returns Spreadsheet|error {
+function createConnectorError(error errorResponse) returns error {
+    error err = error(SPREADSHEET_ERROR_CODE, message = <string>errorResponse.detail()?.message);
+    return err;
+}
+
+function getConvertedValue(json value) returns string | int | float {
+    if (value is int) {
+        return value;
+    } else if (value is float) {
+        return value;
+    } else {
+        return value.toString();
+    }
+}
+
+function setJsonResponse(json jsonResponse, int statusCode, Client cli) returns Spreadsheet | error {
     if (statusCode == http:STATUS_OK) {
-        return convertToSpreadsheet(jsonResponse);
+        return convertToSpreadsheet(jsonResponse, cli);
     }
     return setResponseError(jsonResponse);
 }
 
-function setResponse(json jsonResponse, int statusCode) returns boolean|error {
+function validateResponse(json jsonResponse, int statusCode, Client cli) returns Spreadsheet | error {
     if (statusCode == http:STATUS_OK) {
-        return true;
+        return convertToSpreadsheet(jsonResponse, cli);
+    }
+    return setResponseError(jsonResponse);
+}
+
+function setResponse(json jsonResponse, int statusCode) returns error? {
+    if (statusCode == http:STATUS_OK) {
+        return ();
     }
     return setResponseError(jsonResponse);
 }
