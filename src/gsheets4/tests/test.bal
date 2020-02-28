@@ -26,8 +26,39 @@ function testEnvVariables() {
     if (clientId == "999332401198-m4lqtiu4io7h592of98qmfue8jeqtfan.apps.googleusercontent.com") {
         io:println("Yasssssss");
     }
-    io:println("Client id: " + clientId);
+    io:println(io:sprintf("Client id: %s123" , clientId));
 }
+
+// Tests the Client actions
+@test:Config {}
+function testCreateSpreadsheet() {
+    string createSpreadsheetName = "Ballerina Connector New";
+    string clientId = system:getEnv("CLIENT_ID");
+    string accessToken = system:getEnv("ACCESS_TOKEN");
+    string clientSecret = system:getEnv("CLIENT_SECRET");
+    string refreshToken = system:getEnv("REFRESH_TOKEN");
+    SpreadsheetConfiguration config = {
+        oAuthClientConfig: {
+            accessToken: accessToken,
+            refreshConfig: {
+                clientId: clientId,
+                clientSecret: clientSecret,
+                refreshUrl: REFRESH_URL,
+                refreshToken: refreshToken
+            }
+        }
+    };
+    Client spreadsheetClient = new (config);
+    var spreadsheetRes = spreadsheetClient->createSpreadsheet(createSpreadsheetName);
+    if (spreadsheetRes is Spreadsheet) {
+        Spreadsheet testSpreadsheet = <@untainted>spreadsheetRes;
+        test:assertNotEquals(spreadsheetRes.spreadsheetId, "", msg = "Failed to create spreadsheet");
+        string spreadsheetId = testSpreadsheet.spreadsheetId;
+    } else {
+        test:assertFail(msg = <string>spreadsheetRes.detail()["message"]);
+    }
+}
+
 //SpreadsheetConfiguration config = {
 //    oAuthClientConfig: {
 //        accessToken: system:getEnv("ACCESS_TOKEN"),
